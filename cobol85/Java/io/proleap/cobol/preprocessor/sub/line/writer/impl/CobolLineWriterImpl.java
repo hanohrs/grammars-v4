@@ -9,6 +9,7 @@
 package io.proleap.cobol.preprocessor.sub.line.writer.impl;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import io.proleap.cobol.preprocessor.CobolPreprocessor;
 import io.proleap.cobol.preprocessor.sub.CobolLine;
@@ -18,24 +19,24 @@ import io.proleap.cobol.preprocessor.sub.line.writer.CobolLineWriter;
 public class CobolLineWriterImpl implements CobolLineWriter {
 
 	@Override
-	public String serialize(final List<CobolLine> lines) {
-		final StringBuilder sb = new StringBuilder();
-
-		for (final CobolLine line : lines) {
-			final boolean notContinuationLine = !CobolLineTypeEnum.CONTINUATION.equals(line.type);
-
-			if (notContinuationLine) {
-				if (line.number > 0) {
-					sb.append(CobolPreprocessor.NEWLINE);
-				}
-
-				sb.append(line.blankSequenceArea());
-				sb.append(line.indicatorArea);
-			}
-
-			sb.append(line.getContentArea());
-		}
-
-		return sb.toString();
+	public String serialize(List<CobolLine> lines) {
+		return lines.stream()
+				.map(line -> {
+					StringBuilder sb = new StringBuilder();
+					if (!CobolLineTypeEnum.CONTINUATION.equals(line.type)) {
+						sb.append(line.blankSequenceArea());
+						sb.append(line.indicatorArea);
+					}
+					sb.append(line.getContentArea());
+					if (line.type == CobolLineTypeEnum.COMMENT) {
+						sb.append(line.comment);
+					} else if (line.comment != null && !line.comment.isEmpty()) {
+						sb.append(CobolPreprocessor.WS);
+						sb.append(CobolPreprocessor.COMMENT_TAG);
+						sb.append(line.comment);
+					}
+					return sb.toString();
+				})
+				.collect(Collectors.joining(CobolPreprocessor.NEWLINE));
 	}
 }
