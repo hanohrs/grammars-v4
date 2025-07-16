@@ -60,7 +60,7 @@ public class CobolLineReaderImpl implements CobolLineReader {
 					dialect, lineNumber, CobolLineTypeEnum.BLANK);
 		} else if (!matcher.matches()) {
 			throw new RuntimeException("Is " + format + " the correct line format? Could not parse line "
-					+ (lineNumber + 1) + ": " + line);
+					+ lineNumber + ": " + line);
 		} else {
 			final String sequenceAreaGroup = matcher.group(1);
 			final String indicatorAreaGroup = matcher.group(2);
@@ -84,24 +84,13 @@ public class CobolLineReaderImpl implements CobolLineReader {
 	}
 
 	@Override
-	public List<CobolLine> processLines(final String lines, final CobolSourceFormatEnum format,
-			final CobolDialect dialect) {
-		final Scanner scanner = new Scanner(lines);
-		final List<CobolLine> result = new ArrayList<>();
-
-		String currentLine;
-		int lineNumber = 0;
-
-		while (scanner.hasNextLine()) {
-			currentLine = scanner.nextLine();
-
-			final CobolLine parsedLine = parseLine(currentLine, lineNumber, format, dialect);
-			result.add(parsedLine);
-
-			lineNumber++;
+	public List<CobolLine> processLines(String lines, CobolSourceFormatEnum format, CobolDialect dialect) {
+		try (Scanner scanner = new Scanner(lines)) {
+			final List<CobolLine> result = new ArrayList<>();
+			for (int i = 1; scanner.hasNext(); i++) {
+				result.add(parseLine(scanner.nextLine(), i, format, dialect));
+			}
+			return result;
 		}
-
-		scanner.close();
-		return result;
 	}
 }
