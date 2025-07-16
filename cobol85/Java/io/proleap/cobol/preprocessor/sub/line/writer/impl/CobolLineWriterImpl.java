@@ -19,7 +19,7 @@ public class CobolLineWriterImpl implements CobolLineWriter {
 
 	@Override
 	public String serialize(final List<CobolLine> lines) {
-		final StringBuffer sb = new StringBuffer();
+		final StringBuilder sb = new StringBuilder();
 
 		for (final CobolLine line : lines) {
 			final boolean notContinuationLine = !CobolLineTypeEnum.CONTINUATION.equals(line.type);

@@ -8,17 +8,6 @@
 
 package io.proleap.cobol.preprocessor.sub.document.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.List;
-import java.util.Scanner;
-import java.util.logging.Logger;
-
-import org.antlr.v4.runtime.BufferedTokenStream;
-import org.antlr.v4.runtime.tree.TerminalNode;
-
 import io.proleap.cobol.Cobol85PreprocessorBaseListener;
 import io.proleap.cobol.Cobol85PreprocessorParser;
 import io.proleap.cobol.Cobol85PreprocessorParser.ReplaceClauseContext;
@@ -29,6 +18,18 @@ import io.proleap.cobol.preprocessor.CobolPreprocessor.CobolSourceFormatEnum;
 import io.proleap.cobol.preprocessor.impl.CobolPreprocessorImpl;
 import io.proleap.cobol.preprocessor.sub.CobolLine;
 import io.proleap.cobol.preprocessor.sub.util.TokenUtils;
+import org.antlr.v4.runtime.BufferedTokenStream;
+import org.antlr.v4.runtime.tree.TerminalNode;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.text.Collator;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.List;
+import java.util.Locale;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * ANTLR visitor, which preprocesses a given COBOL program by executing COPY and
@@ -36,11 +37,15 @@ import io.proleap.cobol.preprocessor.sub.util.TokenUtils;
  */
 public class CobolDocumentParserListenerImpl extends Cobol85PreprocessorBaseListener {
 
-	private final static Logger LOG = Logger.getLogger(CobolDocumentParserListenerImpl.class.getSimpleName());
+	private static final Logger LOG = Logger.getLogger(CobolDocumentParserListenerImpl.class.getSimpleName());
+	private static final Collator COLLATOR = Collator.getInstance(Locale.ROOT);
+	static {
+		COLLATOR.setStrength(Collator.PRIMARY);
+	}
 
 	private final Deque<CobolDocumentContext> contexts = new ArrayDeque<>();
 
-	private final List<File> copyFiles;
+	private final List<Path> copyFiles;
 
 	private final CobolDialect dialect;
 
@@ -48,7 +53,7 @@ public class CobolDocumentParserListenerImpl extends Cobol85PreprocessorBaseList
 
 	private final BufferedTokenStream tokens;
 
-	public CobolDocumentParserListenerImpl(final List<File> copyFiles, final CobolSourceFormatEnum format,
+	public CobolDocumentParserListenerImpl(final List<Path> copyFiles, final CobolSourceFormatEnum format,
 			final CobolDialect dialect, final BufferedTokenStream tokens) {
 		this.copyFiles = copyFiles;
 		this.dialect = dialect;
@@ -59,23 +64,9 @@ public class CobolDocumentParserListenerImpl extends Cobol85PreprocessorBaseList
 	}
 
 	protected String buildLines(final String text, final String linePrefix) {
-		final StringBuffer sb = new StringBuffer(text.length());
-		final Scanner scanner = new Scanner(text);
-		boolean firstLine = true;
-
-		while (scanner.hasNextLine()) {
-			final String line = scanner.nextLine();
-
-			if (!firstLine) {
-				sb.append(CobolPreprocessor.NEWLINE);
-			}
-
-			sb.append(linePrefix + CobolPreprocessor.WS + line.trim());
-			firstLine = false;
-		}
-
-		scanner.close();
-		return sb.toString();
+		return text.lines()
+				.map(line -> linePrefix + CobolPreprocessor.WS + line.trim())
+				.collect(Collectors.joining());
 	}
 
 	public CobolDocumentContext context() {
@@ -254,11 +245,11 @@ public class CobolDocumentParserListenerImpl extends Cobol85PreprocessorBaseList
 	public void exitReplaceOffStatement(final Cobol85PreprocessorParser.ReplaceOffStatementContext ctx) {
 		// throw away REPLACE OFF terminals
 		pop();
-	};
+	}
 
-	protected String getCopyFileContent(final String filename, final List<File> copyFiles, final CobolDialect dialect,
+	protected String getCopyFileContent(final String filename, final List<Path> copyFiles, final CobolDialect dialect,
 			final CobolSourceFormatEnum format) {
-		final File copyFile = identifyCopyFile(filename, copyFiles);
+		final Path copyFile = identifyCopyFile(filename, copyFiles);
 		String result;
 
 		if (copyFile == null) {
@@ -279,37 +270,30 @@ public class CobolDocumentParserListenerImpl extends Cobol85PreprocessorBaseList
 	/**
 	 * Identifies a copy file by its name and directory.
 	 */
-	protected File identifyCopyFile(final String filename, final List<File> copyFiles) {
-		File copyFile = null;
-
-		for (final File file : copyFiles) {
-			final String baseName = file.getName().substring(0, file.getName().lastIndexOf('.'));
-			final boolean matchingBaseName = filename.toLowerCase().equals(baseName.toLowerCase());
-
-			if (matchingBaseName) {
-				copyFile = file;
-				break;
-			}
-		}
-
-		return copyFile;
+	protected Path identifyCopyFile(final String filename, final List<Path> copyFiles) {
+		return copyFiles.stream()
+				.filter(copyFile -> {
+					String copyFileName = copyFile.getFileName().toString();
+					final String copyBaseName = copyFileName.substring(0, copyFileName.lastIndexOf('.'));
+					return COLLATOR.equals(filename, copyBaseName);
+				})
+				.findFirst()
+				.orElse(null);
 	}
 
 	/**
 	 * Pops the current preprocessing context from the stack.
 	 */
-	protected CobolDocumentContext pop() {
-		return contexts.pop();
+	protected void pop() {
+		contexts.pop();
 	}
 
 	/**
 	 * Pushes a new preprocessing context onto the stack.
 	 */
-	protected CobolDocumentContext push() {
-        CobolDocumentContext ctx = new CobolDocumentContext();
-        contexts.push(ctx);
-        return ctx;
-    }
+	protected void push() {
+		contexts.push(new CobolDocumentContext());
+	}
 
 	@Override
 	public void visitTerminal(final TerminalNode node) {

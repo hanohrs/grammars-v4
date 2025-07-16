@@ -17,6 +17,7 @@
 				<version>${antlr.version}</version>
 				<configuration>
 					<sourceDirectory>${basedir}</sourceDirectory>
+                    <outputDirectory>target/generated-sources/antlr4/io/proleap/cobol</outputDirectory>
 					<includes>
 						<include>Cobol85.g4</include>
 						<include>Cobol85Preprocessor.g4</include>

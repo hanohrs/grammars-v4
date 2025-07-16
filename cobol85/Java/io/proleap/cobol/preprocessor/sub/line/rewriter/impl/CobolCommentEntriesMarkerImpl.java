@@ -8,10 +8,11 @@
 
 package io.proleap.cobol.preprocessor.sub.line.rewriter.impl;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import io.proleap.cobol.preprocessor.CobolPreprocessor;
 import io.proleap.cobol.preprocessor.CobolPreprocessor.CobolDialect;
@@ -34,7 +35,7 @@ public class CobolCommentEntriesMarkerImpl implements CobolCommentEntriesMarker 
 			"DATE-COMPILED.", "SECURITY.", "REMARKS." };
 
 	public CobolCommentEntriesMarkerImpl() {
-		final String commentEntryTriggerLineFormat = new String("(" + String.join("|", triggersStart) + ")(.+)");
+		final String commentEntryTriggerLineFormat = "(" + String.join("|", triggersStart) + ")(.+)";
 		commentEntryTriggerLinePattern = Pattern.compile(commentEntryTriggerLineFormat, Pattern.CASE_INSENSITIVE);
 	}
 
@@ -67,9 +68,7 @@ public class CobolCommentEntriesMarkerImpl implements CobolCommentEntriesMarker 
 
 	protected boolean isInCommentEntry(final CobolLine line, final boolean isContentAreaAEmpty,
 			final boolean isInOsvsCommentEntry) {
-		final boolean result = CobolLineTypeEnum.COMMENT.equals(line.type) || isContentAreaAEmpty
-				|| isInOsvsCommentEntry;
-		return result;
+		return CobolLineTypeEnum.COMMENT.equals(line.type) || isContentAreaAEmpty || isInOsvsCommentEntry;
 	}
 
 	/**
@@ -79,8 +78,7 @@ public class CobolCommentEntriesMarkerImpl implements CobolCommentEntriesMarker 
 	 * and begin the next paragraph or division.
 	 */
 	protected boolean isInOsvsCommentEntry(final CobolLine line) {
-		final boolean result = CobolDialect.OSVS.equals(line.dialect) && !startsWithTrigger(line, triggersEnd);
-		return result;
+		return CobolDialect.OSVS.equals(line.dialect) && !startsWithTrigger(line, triggersEnd);
 	}
 
 	@Override
@@ -98,14 +96,9 @@ public class CobolCommentEntriesMarkerImpl implements CobolCommentEntriesMarker 
 
 	@Override
 	public List<CobolLine> processLines(final List<CobolLine> lines) {
-		final List<CobolLine> result = new ArrayList<CobolLine>();
-
-		for (final CobolLine line : lines) {
-			final CobolLine processedLine = processLine(line);
-			result.add(processedLine);
-		}
-
-		return result;
+		return lines.stream()
+				.map(this::processLine)
+				.collect(Collectors.toList());
 	}
 
 	/**
@@ -158,7 +151,7 @@ public class CobolCommentEntriesMarkerImpl implements CobolCommentEntriesMarker 
 	 * comment entry.
 	 */
 	protected boolean startsWithTrigger(final CobolLine line, final String[] triggers) {
-		final String contentAreaUpperCase = new String(line.getContentArea()).toUpperCase();
+		final String contentAreaUpperCase = line.getContentArea().toUpperCase(Locale.ROOT);
 
 		boolean result = false;
 

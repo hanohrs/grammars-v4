@@ -34,8 +34,7 @@ public class CobolReplacementMapping implements Comparable<CobolReplacementMappi
 
 	private String extractPseudoText(final PseudoTextContext pseudoTextCtx, final BufferedTokenStream tokens) {
 		final String pseudoText = TokenUtils.getTextIncludingHiddenTokens(pseudoTextCtx, tokens).trim();
-		final String content = pseudoText.replaceAll("^==", "").replaceAll("==$", "").trim();
-		return content;
+		return pseudoText.replaceAll("^==", "").replaceAll("==$", "").trim();
 	}
 
 	/**

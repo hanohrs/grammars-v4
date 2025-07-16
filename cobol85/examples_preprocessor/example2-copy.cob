@@ -1,0 +1,1 @@
+       01 NAME PIC X(20) VALUE 'John Doe'.

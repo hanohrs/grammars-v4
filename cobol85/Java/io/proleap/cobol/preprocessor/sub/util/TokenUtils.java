@@ -23,7 +23,7 @@ public class TokenUtils {
 
 	public static String getHiddenTokensToLeft(final int tokPos, final BufferedTokenStream tokens) {
 		final List<Token> refChannel = tokens.getHiddenTokensToLeft(tokPos, Cobol85PreprocessorLexer.HIDDEN);
-		final StringBuffer sb = new StringBuffer();
+		final StringBuilder sb = new StringBuilder();
 
 		if (refChannel != null) {
 			for (final Token refToken : refChannel) {

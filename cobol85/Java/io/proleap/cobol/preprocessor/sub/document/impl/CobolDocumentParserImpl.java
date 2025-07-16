@@ -8,8 +8,9 @@
 
 package io.proleap.cobol.preprocessor.sub.document.impl;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -28,16 +29,16 @@ import io.proleap.cobol.preprocessor.sub.document.CobolDocumentParser;
  */
 public class CobolDocumentParserImpl implements CobolDocumentParser {
 
-	protected final List<File> copyFiles;
+	protected final List<Path> copyFiles;
 
-	protected final String[] triggers = new String[] { "copy", "exec sql", "exec sqlims", "exec cics", "replace" };
+	protected final String[] triggers = { "copy", "exec sql", "exec sqlims", "exec cics", "replace" };
 
-	public CobolDocumentParserImpl(final List<File> copyFiles) {
+	public CobolDocumentParserImpl(final List<Path> copyFiles) {
 		this.copyFiles = copyFiles;
 	}
 
 	protected boolean containsTrigger(final String code, final String[] triggers) {
-		final String codeLowerCase = code.toLowerCase();
+		final String codeLowerCase = code.toLowerCase(Locale.ROOT);
 		boolean result = false;
 
 		for (final String trigger : triggers) {
@@ -66,7 +67,7 @@ public class CobolDocumentParserImpl implements CobolDocumentParser {
 		return result;
 	}
 
-	protected String processWithParser(final String code, final List<File> copyFiles,
+	protected String processWithParser(final String code, final List<Path> copyFiles,
 			final CobolSourceFormatEnum format, final CobolDialect dialect) {
 		// run the lexer
 		final Cobol85PreprocessorLexer lexer = new Cobol85PreprocessorLexer(CharStreams.fromString(code));
@@ -91,7 +92,6 @@ public class CobolDocumentParserImpl implements CobolDocumentParser {
 
 		walker.walk(listener, startRule);
 
-		final String result = listener.context().read();
-		return result;
+		return listener.context().read();
 	}
 }

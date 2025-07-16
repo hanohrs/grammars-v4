@@ -8,18 +8,18 @@
 
 package io.proleap.cobol.preprocessor;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
 
 public interface CobolPreprocessor {
 
-	public enum CobolDialect {
+	enum CobolDialect {
 		ANSI85, MF, OSVS
 	}
 
-	public enum CobolSourceFormatEnum {
+	enum CobolSourceFormatEnum {
 
 		/**
 		 * Fixed format, standard ANSI / IBM reference. Each line 80
@@ -56,10 +56,7 @@ public interface CobolPreprocessor {
 
 		private final Pattern pattern;
 
-		private final String regex;
-
 		CobolSourceFormatEnum(final String regex, final boolean commentEntryMultiLine) {
-			this.regex = regex;
 			pattern = Pattern.compile(regex);
 			this.commentEntryMultiLine = commentEntryMultiLine;
 		}
@@ -68,48 +65,44 @@ public interface CobolPreprocessor {
 			return pattern;
 		}
 
-		public String getRegex() {
-			return regex;
-		}
-
 		public boolean isCommentEntryMultiLine() {
 			return commentEntryMultiLine;
 		}
 	}
 
-	final static String CHAR_ASTERISK = "*";
+	String CHAR_ASTERISK = "*";
 
-	final static String CHAR_D = "D";
+	String CHAR_D = "D";
 
-	final static String CHAR_D_ = "d";
+	String CHAR_D_ = "d";
 
-	final static String CHAR_MINUS = "-";
+	String CHAR_MINUS = "-";
 
-	final static String CHAR_SLASH = "/";
+	String CHAR_SLASH = "/";
 
-	final static String COMMENT_ENTRY_TAG = ">*CE";
+	String COMMENT_ENTRY_TAG = ">*CE";
 
-	final static String COMMENT_TAG = ">*";
+	String COMMENT_TAG = ">*";
 
-	final static String EXEC_CICS_TAG = ">*EXECCICS";
+	String EXEC_CICS_TAG = ">*EXECCICS";
 
-	final static String EXEC_SQL_TAG = ">*EXECSQL";
+	String EXEC_SQL_TAG = ">*EXECSQL";
 
-	final static String EXEC_SQLIMS_TAG = ">*EXECSQLIMS";
+	String EXEC_SQLIMS_TAG = ">*EXECSQLIMS";
 
-	final static String INDICATOR_FIELD = "([ABCdD\\t\\-/*# ])";
+	String INDICATOR_FIELD = "([ABCdD\\t\\-/*# ])";
 
-	final static String NEWLINE = "\n";
+	String NEWLINE = "\n";
 
-	final static String WS = " ";
+	String WS = " ";
 
-	String process(File cobolFile, List<File> copyFiles, CobolSourceFormatEnum format) throws IOException;
+	String process(Path cobolFile, List<Path> copyFiles, CobolSourceFormatEnum format) throws IOException;
 
-	String process(File cobolFile, List<File> copyFiles, CobolSourceFormatEnum format, CobolDialect dialect)
+	String process(Path cobolFile, List<Path> copyFiles, CobolSourceFormatEnum format, CobolDialect dialect)
 			throws IOException;
 
-	String process(String cobolCode, List<File> copyFiles, CobolSourceFormatEnum format);
+	String process(String cobolCode, List<Path> copyFiles, CobolSourceFormatEnum format);
 
-	String process(String cobolCode, List<File> copyFiles, CobolSourceFormatEnum format, CobolDialect dialect);
+	String process(String cobolCode, List<Path> copyFiles, CobolSourceFormatEnum format, CobolDialect dialect);
 
 }

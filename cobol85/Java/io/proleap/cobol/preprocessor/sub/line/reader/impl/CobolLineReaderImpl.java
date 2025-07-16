@@ -87,9 +87,9 @@ public class CobolLineReaderImpl implements CobolLineReader {
 	public List<CobolLine> processLines(final String lines, final CobolSourceFormatEnum format,
 			final CobolDialect dialect) {
 		final Scanner scanner = new Scanner(lines);
-		final List<CobolLine> result = new ArrayList<CobolLine>();
+		final List<CobolLine> result = new ArrayList<>();
 
-		String currentLine = null;
+		String currentLine;
 		int lineNumber = 0;
 
 		while (scanner.hasNextLine()) {

@@ -53,30 +53,27 @@ public class CobolLineIndicatorProcessorImpl implements CobolLineIndicatorProces
 		final CobolLine result;
 
 		switch (line.type) {
-		case DEBUG:
-			result = CobolLine.with(line, CobolPreprocessor.WS, handledContentArea);
-			break;
-		case CONTINUATION:
-			final String trimmedContentArea = handledContentArea.trim();
-			final char firstCharOfContentArea = trimmedContentArea.charAt(0);
+			case CONTINUATION:
+				final String trimmedContentArea = handledContentArea.trim();
+				final char firstCharOfContentArea = trimmedContentArea.charAt(0);
 
-			switch (firstCharOfContentArea) {
-			case '\"':
-			case '\'':
-				result = CobolLine.with(line, CobolPreprocessor.WS, trimmedContentArea.substring(1));
+				switch (firstCharOfContentArea) {
+					case '\"':
+					case '\'':
+						result = CobolLine.with(line, CobolPreprocessor.WS, trimmedContentArea.substring(1));
+						break;
+					default:
+						result = CobolLine.with(line, CobolPreprocessor.WS, trimmedContentArea);
+						break;
+				}
 				break;
+			case COMMENT:
+				result = CobolLine.with(line, CobolPreprocessor.COMMENT_TAG + CobolPreprocessor.WS, handledContentArea);
+				break;
+			case NORMAL:
 			default:
-				result = CobolLine.with(line, CobolPreprocessor.WS, trimmedContentArea);
+				result = CobolLine.with(line, CobolPreprocessor.WS, handledContentArea);
 				break;
-			}
-			break;
-		case COMMENT:
-			result = CobolLine.with(line, CobolPreprocessor.COMMENT_TAG + CobolPreprocessor.WS, handledContentArea);
-			break;
-		case NORMAL:
-		default:
-			result = CobolLine.with(line, CobolPreprocessor.WS, handledContentArea);
-			break;
 		}
 
 		return result;
@@ -84,7 +81,7 @@ public class CobolLineIndicatorProcessorImpl implements CobolLineIndicatorProces
 
 	@Override
 	public List<CobolLine> processLines(final List<CobolLine> lines) {
-		final List<CobolLine> result = new ArrayList<CobolLine>();
+		final List<CobolLine> result = new ArrayList<>();
 
 		for (final CobolLine line : lines) {
 			final CobolLine processedLine = processLine(line);
